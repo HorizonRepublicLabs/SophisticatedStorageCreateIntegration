@@ -45,6 +45,7 @@ group = mod_group_id
 def isClientDataRun = gradle.startParameter.taskNames.any { it.toLowerCase().contains('clientdata') }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         url "https://minecraft.curseforge.com/api/maven/"
@@ -181,13 +182,6 @@ sourceSets.main.resources {
     srcDir 'src/generated/resources'
 }
 
-// Native Create is not available for 26.3. Keep all real integration sources for the
-// future port, but exclude them from compilation rather than shipping an inert entrypoint.
-// Remove this exclusion after updating the Create dependency to a compatible 26.3 release.
-sourceSets.main.java {
-    exclude '**/*.java'
-}
-
 if (isClientDataRun) {
     tasks.named('runClientData').configure {
         enabled = false
@@ -211,6 +205,10 @@ dependencies {
     if (!isClientDataRun) {
         localRuntime "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
     }
+    compileOnly "com.simibubi.create:create-${create_mc_version}:${create_version}"
+    compileOnly "dev.engine-room.flywheel:flywheel-neoforge:${flywheel_version}"
+    compileOnly "net.createmod.ponder:neoforge:${ponder_version}"
+    compileOnly "net.createmod.catnip:neoforge:${catnip_version}"
 
     if (findProject(':SophisticatedCore') != null) {
         dependencies.implementation project(':SophisticatedCore')
@@ -244,8 +242,8 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_authors         : mod_authors, mod_description: mod_description, mod_display_url: mod_display_url,
             mod_full_version    : "${project.mod_version}.${getBuildNumber()}${getStable()}",
             jei_version_range   : "[" + jei_version + ",)",
-            create_version_range   : "[" + create_version.substring(0, create_version.indexOf("-")) + ",)",
-            ss_version_range          :"[" + ss_version.substring(ss_version.indexOf("-") + 1, ss_version.lastIndexOf(',')) + ",)"
+            create_version_range   : "[" + create_version.split("-")[0] + ",)",
+            ss_version_range          :"[" + (ss_version.contains(',') ? ss_version.substring(ss_version.indexOf("-") + 1, ss_version.lastIndexOf(',')) : ss_version.substring(ss_version.indexOf("-") + 1).replace(".-SNAPSHOT", "")) + ",)"
     ]
     inputs.properties replaceProperties
 
